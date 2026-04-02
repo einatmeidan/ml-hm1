@@ -1,5 +1,5 @@
-#part 1, Q2:
-#first calculation 
+# part 1, Q2
+# first calculation
 
 import numpy as np
 
@@ -35,11 +35,6 @@ changed_matrix = np.array([
     [-8160, 5]
 ])
 
-Xt = np.array([
-    [1, 1, 1, 1, 1],
-    [1180, 2570, 770, 1960, 1680]
-])
-
 second_calc = changed_matrix @ Xt
 
 print("\nDeterminant (ad - bc) =")
@@ -54,13 +49,62 @@ print(Xt)
 print("\nSecond calculation =")
 print(second_calc)
 
-
 # third calculation
-
-# now multiply by (1 / det)
+# multiply by 1/det to get X dagger
 inverse_by_formula = (1 / det) * second_calc
 
-np.set_printoptions(suppress=True)
-
-print("\nThird calculation =")
+print("\nX† =")
 print(inverse_by_formula)
+
+
+# Q3
+# first calculation for question 3:
+# w* = X† y
+
+y = np.array([
+    [221900],
+    [538000],
+    [180000],
+    [604000],
+    [510000]
+])
+
+print("\ny =")
+print(y)
+
+w_star = inverse_by_formula @ y
+
+print("\nw* = X†y =")
+print(w_star)
+
+
+# Q4
+# compute the minimum squared loss: J(w*) = ||Xw* - y||^2
+
+# first calculation for question 4:
+# compute Xw*
+y_pred = X @ w_star
+
+print("\nXw* =")
+print(y_pred)
+
+# second calculation for question 4:
+# compute the error vector Xw* - y
+errors = y_pred - y
+
+print("\nXw* - y =")
+print(errors)
+
+# third calculation for question 4:
+# square each error
+squared_errors = errors ** 2
+
+print("\n(Xw* - y)^2 =")
+print(squared_errors)
+
+# final calculation:
+# sum all squared errors
+J = np.sum(squared_errors)
+
+print("\nJ(w*) =")
+print(J)
