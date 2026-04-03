@@ -1,6 +1,6 @@
 ###### Your ID ######
-# ID1: 123456789
-# ID2: 987654321
+# ID1: 206630915
+# ID2: 208004416
 #####################
 
 # imports
@@ -21,7 +21,10 @@ def add_bias_feature(X):
     ###########################################################################
     # TODO: Implement the function by adding a column of ones to the data.   #
     ###########################################################################
-    pass
+    n = X.shape[0]
+    bias_column = np.ones((n, 1))
+    X_with_bias = np.hstack((bias_column, X))
+    return X_with_bias
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -46,7 +49,10 @@ def compute_mean_squared_error(X, y, w):
     ###########################################################################
     # TODO: Implement the MSE loss function.                                  #
     ###########################################################################
-    pass
+    predictions = X @ w
+    errors = predictions - y
+    J = np.mean(errors ** 2)
+    return J
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -73,7 +79,15 @@ def gradient_descent(X, y, w, eta, num_iters):
     ###########################################################################
     # TODO: Implement the simple gradient descent optimization algorithm.     #
     ###########################################################################
-    pass
+    w = w.copy()
+    J_history = []
+    n = X.shape[0]
+    
+    for i in range(num_iters):
+        gradient_descent_formula = (2/n) * X.T @ (X @ w - y)
+        w -= eta * gradient_descent_formula
+        J_history.append(compute_mean_squared_error(X, y, w))
+    return w, J_history
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -101,7 +115,17 @@ def gradient_descent_stop_condition(X, y, w, eta, max_iter, epsilon=1e-5):
     ###########################################################################
     # TODO: Implement gradient descent with gradient-norm stopping condition. #
     ###########################################################################
-    pass
+    w = w.copy()
+    J_history = []
+    n = X.shape[0]
+    
+    for i in range(max_iter):
+        gradient_descent = (2/n) * X.T @ (X @ w - y)       
+        if np.linalg.norm(gradient_descent) < epsilon:
+            break         
+        w = w - eta * gradient_descent
+        J_history.append(compute_mean_squared_error(X, y, w))
+    return w, J_history
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -127,7 +151,10 @@ def find_best_learning_rate(X, y, w_init, iterations, eta_values):
     ###########################################################################
     # TODO: Implement the function that runs GD with multiple etas.           #
     ###########################################################################
-    pass
+    for eta in eta_values:
+        w, J_history = gradient_descent(X, y, w_init.copy(), eta, iterations)
+        history_per_eta[eta] = J_history   
+    return history_per_eta
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -152,7 +179,10 @@ def compute_pinv(X, y):
     ###########################################################################
     # TODO: Implement the pseudoinverse algorithm.                            #
     ###########################################################################
-    pass
+    XtX = X.T @ X
+    XtX_inv = np.linalg.inv(XtX)
+    w_star = XtX_inv @ X.T @ y
+    return w_star
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -184,7 +214,21 @@ def mini_batch_gradient_descent(X, y, w, eta, num_epochs, batch_size):
     #   X_shuffled = X[shuffled_indices]                                      #
     #   y_shuffled = y[shuffled_indices]                                      #
     ###########################################################################
-    pass
+    n = X.shape[0]
+    
+    for epoch in range(num_epochs):
+        shuffled_indices = np.random.permutation(n)
+        X_shuffled = X[shuffled_indices]
+        y_shuffled = y[shuffled_indices]
+        
+        for i in range(0, n, batch_size):
+            batch_X = X_shuffled[i:i+batch_size]
+            batch_y = y_shuffled[i:i+batch_size]
+            actual_batch_size = batch_X.shape[0]
+            gradient_descent_formula = (2/actual_batch_size) * batch_X.T @ (batch_X @ w - batch_y)
+            w -= eta * gradient_descent_formula 
+        J_history.append(compute_mean_squared_error(X, y, w))
+    return w, J_history
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -219,8 +263,13 @@ def solve_LASSO(X, y, lmda, w_init=None, eta=0.01, max_iter=10_000):
     ###########################################################################
     #    Your code here
     ###########################################################################
+    n = X.shape[0]
     
-
+    for i in range(max_iter):
+        mse_gradient = (2/n) * X.T @ (X @ w - y)
+        l1_gradient = lmda * np.sign(w)
+        total_gradient = mse_gradient + l1_gradient
+        w -= eta * total_gradient
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -246,7 +295,17 @@ def choose_best_L1_parameter(X_train, y_train, X_val, y_val, lambda_values):
     # TODO: Implement the function. For each lambda, fit LASSO regression    #
     # on train, record train and validation MSE loss. Return best lambda and dict. #
     ###########################################################################
-    pass
+    best_val_loss= np.inf
+    
+    for lmda in lambda_values:
+        w = solve_LASSO(X_train, y_train, lmda)
+        train_loss = compute_mean_squared_error(X_train, y_train, w)
+        val_loss = compute_mean_squared_error(X_val, y_val, w)
+        results_dict[lmda] = {"train_loss": train_loss, "val_loss": val_loss}
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_lambda = lmda
+    return best_lambda, results_dict
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -270,7 +329,13 @@ def knn_predict(X_train, y_train, X_test, k):
     ###########################################################################
     # TODO: Implement K-nearest neighbors regression.                        #
     ###########################################################################
-    pass
+    for house in X_test:
+        distances = np.sqrt(np.sum((X_train - house) ** 2, axis=1))
+        nearest_indices = np.argsort(distances)[:k]
+        nearest_labels = y_train[nearest_indices]
+        predicted_value = np.mean(nearest_labels)
+        y_pred.append(predicted_value)
+    y_pred = np.array(y_pred)   
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
